@@ -33,9 +33,10 @@ func (t *TimeRingSeries) Push(v Entry) {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
 	now, inseconds := t.clock.SameSecond()
-	prev := t.prevPoint(1)
 	if inseconds {
-		t.r.Prev().Value = v.Sum(prev.Entry)
+		prev := t.prevPoint(1)
+		sum := v.Sum(prev.Entry)
+		t.r.Prev().Value = Point{Entry: sum, Ctime: now}
 		return
 	}
 	t.r.Value = Point{Entry: v, Ctime: now}
