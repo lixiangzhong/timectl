@@ -84,3 +84,13 @@ func (r *RetryLimit) Wait(key string) {
 	defer t.Stop()
 	<-t.C
 }
+
+func (r *RetryLimit) Reset(key string) {
+	r.rw.Lock()
+	defer r.rw.Unlock()
+	r.reset(key)
+}
+
+func (r *RetryLimit) reset(key string) {
+	r.m[key] = retryLimitEntry{RetryAt: time.Now().Add(time.Second), Interval: time.Second}
+}
