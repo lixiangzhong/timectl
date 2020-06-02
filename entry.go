@@ -12,16 +12,14 @@ type Object interface {
 	Key() interface{}
 }
 
-type any interface{}
-
 type ObjectPoint struct {
-	any
-	Time int64 `json:"time"`
+	Object interface{}
+	Time   int64 `json:"time"`
 }
 
 func NewObjectPoint(val interface{}, time int64) ObjectPoint {
 	return ObjectPoint{
-		any:  val,
-		Time: time,
+		Object: val,
+		Time:   time,
 	}
 }
