@@ -12,9 +12,9 @@ type Object interface {
 	Key() interface{}
 }
 
-type any interface{}
+type Any interface{}
 
 type ObjectPoint struct {
-	any
+	Any
 	Time int64 `json:"time"`
 }
