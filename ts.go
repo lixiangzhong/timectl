@@ -132,7 +132,7 @@ func (t *TS) Series(obj Object) []ObjectPoint {
 	end := now
 	for i := start; i < end; i++ {
 		data = append(data, ObjectPoint{
-			Any:  obj,
+			any:  obj,
 			Time: i,
 		})
 	}
@@ -143,7 +143,7 @@ func (t *TS) Series(obj Object) []ObjectPoint {
 			v, ok := node.data[obj.Key()]
 			if ok {
 				idx := node.timestamp - start
-				data[idx].Any = v
+				data[idx].any = v
 			}
 		}
 		p = p.Prev()
@@ -179,7 +179,7 @@ func (t *TS) Get(timestamp int64, obj Object) Object {
 func (t *TS) GetPoint(timestamp int64, obj Object) ObjectPoint {
 	v := t.Get(timestamp, obj)
 	return ObjectPoint{
-		Any:  v,
+		any:  v,
 		Time: timestamp,
 	}
 }
