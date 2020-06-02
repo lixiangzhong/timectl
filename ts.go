@@ -162,7 +162,11 @@ func (t *TS) Get(timestamp int64, obj Object) Object {
 	for {
 		node := t.getNode(p)
 		if node.timestamp == timestamp {
-			return node.data[obj.Key()]
+			v, ok := node.data[obj.Key()]
+			if !ok {
+				return obj
+			}
+			return v
 		}
 		p = p.Prev()
 		if p == t.seg {
