@@ -48,14 +48,7 @@ func (t *TS) Push(value Object) {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
 	now := time.Now().Unix()
-	if now != t.timestamp { //时间变动时,计算max
-		t.calcSeries()
-		t.calcMax(value.Key())
-		t.calcMax(value.MergeKey())
-		t.seg = t.seg.Next()
-		t.seg.Value = nil
-	}
-	t.timestamp = now
+	t.rotate(now)
 	node := t.getNode(t.seg)
 	node.timestamp = now
 	node.data[value.Key()] = value
@@ -67,6 +60,23 @@ func (t *TS) Push(value Object) {
 	}
 	node.data[value.MergeKey()] = sum
 	t.seg.Value = node
+}
+
+func (t *TS) rotate(now int64) bool { //时间变动时,计算max
+	if now != t.timestamp {
+		t.calcSeries()
+		node := t.getNode(t.seg)
+		for key, val := range node.data {
+			if t.max[key] == nil || t.max[key].Less(val) {
+				t.max[key] = val
+			}
+		}
+		t.seg = t.seg.Next()
+		t.seg.Value = nil
+		t.timestamp = now
+		return true
+	}
+	return false
 }
 
 //calcSeries  计算series,例子:实时图
@@ -82,14 +92,14 @@ func (t *TS) calcSeries() {
 }
 
 //calcMax 计算max
-func (t *TS) calcMax(key interface{}) {
-	node := t.getNode(t.seg)
-	val := node.data[key]
-	max := t.max[key]
-	if max == nil || max.Less(val) {
-		t.max[key] = val
-	}
-}
+//func (t *TS) calcMax(key interface{}) {
+//	node := t.getNode(t.seg)
+//	val := node.data[key]
+//	max := t.max[key]
+//	if max == nil || max.Less(val) {
+//		t.max[key] = val
+//	}
+//}
 
 //getNode 取r.Value的Node实例,并初使化
 func (t *TS) getNode(r *ring.Ring) Node {
@@ -104,6 +114,8 @@ func (t *TS) getNode(r *ring.Ring) Node {
 func (t *TS) PopMax() []Object {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
+	now := time.Now().Unix()
+	t.rotate(now)
 	data := make([]Object, 0)
 	for _, v := range t.max {
 		data = append(data, v)
@@ -114,20 +126,23 @@ func (t *TS) PopMax() []Object {
 
 //Max 取出指定key的Max
 func (t *TS) Max(key interface{}) Object {
-	t.mutex.RLock()
-	defer t.mutex.RUnlock()
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
+	now := time.Now().Unix()
+	t.rotate(now)
 	return t.max[key]
 }
 
 //Series  取出series,例子用来画实时图
 func (t *TS) Series(obj Object) []ObjectPoint {
-	t.mutex.RLock()
-	defer t.mutex.RUnlock()
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
 	data := make([]ObjectPoint, 0)
 	if t.series == nil {
 		return data
 	}
 	now := time.Now().Unix()
+	t.rotate(now)
 	start := now - int64(t.series.Len())
 	end := now
 	for i := start; i < end; i++ {

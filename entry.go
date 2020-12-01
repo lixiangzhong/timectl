@@ -14,7 +14,7 @@ type Object interface {
 
 type ObjectPoint struct {
 	Object interface{} `json:"object"`
-	Time   int64       `json:"time"`
+	Time   int64       `json:"time" bson:"time"`
 }
 
 func NewObjectPoint(val interface{}, time int64) ObjectPoint {
